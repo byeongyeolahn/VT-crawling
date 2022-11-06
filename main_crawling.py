@@ -49,7 +49,6 @@ def main_crawling(file, option):
         # 명시적 대기
         shadow.set_explicit_wait(20, 5)
     
-
     # detail 창일 경우
         if option == 'details':
             interesting_String = shadow.find_element('vt-ui-code-block')
@@ -70,7 +69,8 @@ def main_crawling(file, option):
             detection_element = shadow.find_element('vt-ui-expandable')
             detection = detection_element.text
             detection_list = detection.split('\n')
-            return crawling_parse(file[i], detection_list, 'detection')
+            crawling_parse(file[i], detection_list, 'detection')
+            time.sleep(5)
         
         else:
             print('Option Value Error')
@@ -138,11 +138,12 @@ def create_dec(tag_list):
 
 if __name__ == '__main__':
     #분류할 카테고리 불러옴
+    start = time.time()
     create_dec(string_list.classification_list())
-
-    apk_file_path = "C:\\Users\\quddu\\Desktop\\test"
+    apk_file_path = "sample"
     # apk_file_path = "C:\\Users\\SCHCsRC\\Desktop\\test_dic"
     fl = file_list(apk_file_path)
 
     crawling_data = main_crawling(fl, 'detection')
+    print("총 걸린 분류 시간 :", time.time() - start)
     #파서 실행
