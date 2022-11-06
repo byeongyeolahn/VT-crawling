@@ -36,13 +36,13 @@ def main_crawling(file, option):
             link_info = 'https://www.virustotal.com/gui/file/{}'.format(file[i][:-4])
             driver.get(link_info)
             print("================================================================================")
-            print("###" + str(link_info) + "접속...###")  
+            print("[+]" + str(link_info) + "접속")  
         
         else:
             url_link = link_info + str(option)
             driver.get(url_link)
             print("================================================================================")
-            print("###" + str(url_link) + "접속...###")
+            print("[+]" + str(url_link) + "접속")
         
         #Shadow 객체 생성
         shadow = Shadow(driver)
@@ -52,7 +52,7 @@ def main_crawling(file, option):
     # detail 창일 경우
         if option == 'details':
             interesting_String = shadow.find_element('vt-ui-code-block')
-            print("### interesting String ### :\n" + str(interesting_String.text))
+            print("[+] interesting String :\n" + str(interesting_String.text))
             print("================================================================================")
             File_detail = shadow.find_element('vt-ui-file-details')
             File_detail_text = File_detail.text
@@ -78,9 +78,9 @@ def main_crawling(file, option):
 
 def file_list(file_path):
     print("================================================================================")
-    print("###파일 목록 수집 중...###")
+    print("[+] 파일 목록 수집 중...")
     fl = os.listdir(file_path)
-    print("###파일 목록 수집 완료!###")
+    print("[+] 파일 목록 수집 완료")
     return fl
 
 def crawling_parse(file_name, data, option):
@@ -95,7 +95,7 @@ def crawling_parse(file_name, data, option):
                 vender_index = data.index(vendor_list[vl])
                 vendor_value.append(data[vender_index+1])
             except:
-                print(str(vendor_list[vl] + "이(가) 존재하지 않음"))
+                print("[+]" + str(vendor_list[vl] + "이(가) 존재하지 않음"))
         return Determining_Malware(file_name, vendor_list, vendor_value)
         
         print(vendor_value)
@@ -120,12 +120,14 @@ def Determining_Malware(file_name, company, detection_name):
         print()
     else:
         shutil.move(start_path, target_path)
+    print("[+]" + str(file_name) + "분류(악성) 완료")
+
 
 
 
 def create_dec(tag_list):
     if os.path.isdir('./mal_apk') and os.path.isdir('./benign_apk'):
-        print("모든 디렉토리 이미 존재")
+        print("[+] 모든 디렉토리 이미 존재")
     else:
         os.mkdir('./mal_apk')
         os.mkdir('./benign_apk')
@@ -134,13 +136,17 @@ def create_dec(tag_list):
             os.mkdir(dic_name)
             print(str(dic_name) + " 디렉토리 생성")
         print("================================================================================")
-        print("###디렉토리 생성 완료###")
+        print("[+] 디렉토리 생성 완료")
+
+# def Mal_Classification(file_path, detection_name):
+    
 
 if __name__ == '__main__':
-    #분류할 카테고리 불러옴
     start = time.time()
+    #디렉토리 생성
     create_dec(string_list.classification_list())
-    apk_file_path = "sample"
+
+    apk_file_path = "sample" # 분류 대상 샘플 존재 경로
     # apk_file_path = "C:\\Users\\SCHCsRC\\Desktop\\test_dic"
     fl = file_list(apk_file_path)
 
