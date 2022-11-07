@@ -12,7 +12,7 @@ import json
 
 #chromedriver 경로 설정(작업 공간과 동일 경로에 있으면 에러 발생함)
 
-CHROMEDRIVER_PATH = 'C:\\Users\\quddu\\\Desktop\\뺑열\\\Coding\\CHROMEDRIVER\\chromedriver.exe'
+CHROMEDRIVER_PATH = 'C:\\Users\\SCHCsRC\\Desktop\\병열\\ChromeDriver\\chromedriver.exe'
 
 def get_driver():
     options = webdriver.ChromeOptions()
@@ -61,10 +61,7 @@ def main_crawling(file, option):
             return File_detail_list
         
         elif option == 'detection':
-            score_element = shadow.find_element('vt-ui-detections-widget')
-            score = score_element.text
-            print(score)
-            
+            time.sleep(5) # 에러 발생 시만 넣기
             detection_element = shadow.find_element('vt-ui-expandable')
             detection = detection_element.text
             detection_list = detection.split('\n')
@@ -84,20 +81,20 @@ def file_list(file_path):
 
 def crawling_parse(file_name, data, option):
     if option == "detection":
-        #벤더사 목록 불러옴
-        vendor_list = string_list.vendor_list()
-        #진단명 저장할 리스트
+        vendor_list = []
         vendor_value = []
-        for vl in range(len(vendor_list)):
+        for vl in range(int(len(data)/2+1)):
             try:
-                # 벤더사에 맞는 진단명을 동일한 인덱스로 측정
-                vender_index = data.index(vendor_list[vl])
-                vendor_value.append(data[vender_index+1])
+                if vl == 0:
+                    continue
+                else:
+                    vendor_list.append(data[2*vl-1])
+                    vendor_value.append(data[(2*vl)])
             except:
-                print("[+] " + str(vendor_list[vl] + "이(가) 존재하지 않음"))
+                print("[+] 진단명, 회사 파싱 중 오류 발생" )
         return Determining_Malware(file_name, vendor_list, vendor_value)
         
-        print(vendor_value)
+
     elif option == "details":
         title_string = string_list.detail_string()
         target_string = []
@@ -107,30 +104,34 @@ def crawling_parse(file_name, data, option):
 
 
 def Determining_Malware(file_name, company, detection_name):
-    total = len(detection_name)
+    # 스코어
     type_error = detection_name.count('Unable to process file type')
     undetected = detection_name.count('Undetected')
-    detected = total - (type_error + undetected)
+    total = len(detection_name) - type_error
+    detected = total - undetected
     print(str(file_name) + "의 Score : " + str(detected) + "/" + str(total))
+    
+    #분류
     start_path = "sample/" + str(file_name)
     target_path = "mal_apk/" + str(file_name)
     if detected <= 1:
         shutil.move("sampl\\/{file}", "benign_apk\\{file}}").format(file= file_name)
-        print()
     else:
         shutil.move(start_path, target_path)
     print("[+] " + str(file_name) + "분류(악성) 완료")
 
-    # dic로 전환
+    # Json 생성
     list_to_dictionary(file_name, company, detection_name)
 
 def create_dec(tag_list):
+    dic_list = string_list.dic_list_load()
     if os.path.isdir('./mal_apk') and os.path.isdir('./benign_apk'):
         print("[+] 모든 디렉토리 이미 존재")
     else:
-        os.mkdir('./mal_apk')
-        os.mkdir('./benign_apk')
-        os.mkdir('./json_dic')
+        for dl in dic_list:
+            os.mkdir(dl)
+            print(str(dl) + " 디렉토리 생성")
+            
         for ct in range(len(tag_list)):
             dic_name = './mal_apk/{}'.format(tag_list[ct])
             os.mkdir(dic_name)
@@ -147,14 +148,22 @@ def list_to_dictionary(file_name, company, detection_name):
 
     slice_filename = file_name[:-4]
     json_name = "./json_dic/" + str(slice_filename) + ".json"
+    
+    classification_list = string_list.classification_list()
+    detection_name_string = ''.join(detection_name)
+    
     with open(json_name, "w") as json_file:
         json.dump(dictionary, json_file, indent=4, sort_keys=True)
+        for cl in range(len(classification_list)):
+            count = 0
+            count = detection_name_string.count(classification_list[cl])
+            if cl == 0:
+                dic = {classification_list[cl] : count}
+            else:
+                dic[classification_list[cl]] = count
+        json.dump(dic, json_file, indent=4, sort_keys=True)
     print("[+] " + str(json_name) + ".json 파일 변환 완료")
-# def Mal_Classification(file_path, detection_name):
-    # vendor_top_15 = string_list.vendor_top_15()
-
     
-
 if __name__ == '__main__':
     start = time.time()
     #디렉토리 생성
