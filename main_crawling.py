@@ -5,15 +5,31 @@ import os
 import string_list
 import shutil
 import json
+import pandas as pd
+import dataframe
+import argparse
 
+#Cli 옵션 
 # parser = argparse.ArgumentParser(description="사용법 test 입니다")
-# parser.add)argument('-')
-# #파일 리스트 인자로 받아서 URL 연결
+# parser.add_argument('-p', type=str, help = '-p C:\\Users\\SCHCsRC\\Desktop\\병열\\ChromeDriver\\chromedriver.exe' )
+# parser.add_argument('-o', type=str, help = '-o detection')
 
-#chromedriver 경로 설정(작업 공간과 동일 경로에 있으면 에러 발생함)
+# args = parser.parse_args()
 
-CHROMEDRIVER_PATH = 'C:\\Users\\SCHCsRC\\Desktop\\병열\\ChromeDriver\\chromedriver.exe'
+# CHROMEDRIVER_PATH = args.p
+CHROMEDRIVER_PATH = 'C:\\Users\\quddu\\Desktop\\뺑열\\Coding\\CHROMEDRIVER\\chromedriver.exe'
 
+detection_value = []
+family = []
+
+#시작 시 알림 함수
+def start():
+    print("================================================================================")
+    print("[+] VT Crawling Start ! ")       
+    start = time.time()
+    return start
+
+# 드라이버 호출
 def get_driver():
     options = webdriver.ChromeOptions()
     # options.add_argument('headless')
@@ -30,9 +46,9 @@ def main_crawling(file, option):
     driver=get_driver()
     # 옵션에 따른 URL 접근
     for i in range(len(file)):
-        link_info = 'https://www.virustotal.com/gui/file/{}/'.format(file[i][:-4])
+        link_info = 'https://www.virustotal.com/gui/file/{}/'.format(file[i])
         if option == 'detection':
-            link_info = 'https://www.virustotal.com/gui/file/{}'.format(file[i][:-4])
+            link_info = 'https://www.virustotal.com/gui/file/{}'.format(file[i])
             driver.get(link_info)
             print("================================================================================")
             print("[+] " + str(link_info) + " 접속")  
@@ -70,14 +86,6 @@ def main_crawling(file, option):
         
         else:
             print('Option Value Error')
-            
-
-def file_list(file_path):
-    print("================================================================================")
-    print("[+] 파일 목록 수집 중...")
-    fl = os.listdir(file_path)
-    print("[+] 파일 목록 수집 완료")
-    return fl
 
 def crawling_parse(file_name, data, option):
     if option == "detection":
@@ -109,35 +117,20 @@ def Determining_Malware(file_name, company, detection_name):
     undetected = detection_name.count('Undetected')
     total = len(detection_name) - type_error
     detected = total - undetected
-    print(str(file_name) + "의 Score : " + str(detected) + "/" + str(total))
-    
-    #분류
-    start_path = "sample/" + str(file_name)
-    target_path = "mal_apk/" + str(file_name)
-    if detected <= 1:
-        shutil.move("sampl\\/{file}", "benign_apk\\{file}}").format(file= file_name)
-    else:
-        shutil.move(start_path, target_path)
-    print("[+] " + str(file_name) + "분류(악성) 완료")
 
+    #분류 결과(Top 15로 변경 예정)
+    print(str(file_name) + "의 Score : " + str(detected) + "/" + str(total))
+
+    # 라벨링 작업 진행
+    if detected <= 1:
+        print("[+] " + str(file_name) + "분류(정상) 완료")
+        detection_value.append('0')
+
+    else:
+        print("[+] " + str(file_name) + "분류(악성) 완료")
+        detection_value.append('1')
     # Json 생성
     list_to_dictionary(file_name, company, detection_name)
-
-def create_dec(tag_list):
-    dic_list = string_list.dic_list_load()
-    if os.path.isdir('./mal_apk') and os.path.isdir('./benign_apk'):
-        print("[+] 모든 디렉토리 이미 존재")
-    else:
-        for dl in dic_list:
-            os.mkdir(dl)
-            print(str(dl) + " 디렉토리 생성")
-            
-        for ct in range(len(tag_list)):
-            dic_name = './mal_apk/{}'.format(tag_list[ct])
-            os.mkdir(dic_name)
-            print(str(dic_name) + " 디렉토리 생성")
-        print("================================================================================")
-        print("[+] 디렉토리 생성 완료")
 
 def list_to_dictionary(file_name, company, detection_name):
     vendor_list = company
@@ -162,18 +155,41 @@ def list_to_dictionary(file_name, company, detection_name):
             else:
                 dic[classification_list[cl]] = count
         json.dump(dic, json_file, indent=4, sort_keys=True)
-    print("[+] " + str(json_name) + ".json 파일 변환 완료")
-    
+    print("[+] " + str(json_name) + "파일 변환 완료")
+
+def file_list_fun(data):
+    print("================================================================================")
+    print("[+] 파일 목록 수집 중...")    
+    df = data['sha256'].to_list()
+    print("[+] 파일 목록 수집 완료")
+    return df
+
+def csv_value_add(df, family, detection):
+    df['family'] = family
+    df['detection'] = detection
+    return df
+
 if __name__ == '__main__':
-    start = time.time()
-    #디렉토리 생성
-    create_dec(string_list.classification_list())
+    start = start()
+    #CSV 병합
+    if os.path.isfile('sample/result.csv'):
+        print("[+] result.csv 파일이 존재")
+        df = pd.read_csv('sample/result.csv')
+    else:
+        df = dataframe.csv_load('sample')
+    
+    #파일 목록 획득
+    file_list = file_list_fun(df)
+    crawling_data = main_crawling(file_list, 'detection')
 
-    apk_file_path = "sample" # 분류 대상 샘플 존재 경로
-    # apk_file_path = "C:\\Users\\SCHCsRC\\Desktop\\test_dic"
-    fl = file_list(apk_file_path)
+    # CSV 값 쓰기 
+    labeled_df = csv_value_add(df, family, detection_value)
+    try:
+        labeled_df.to_csv('sample/result.csv', index=False)
+    except:
+        print("[+] 동일 파일 이름 존재")
+        labeled_df.to_csv('sample/result.csv', index=False)
 
-    crawling_data = main_crawling(fl, 'detection')
     print("총 걸린 분류 시간 :", time.time() - start)
     print("[+] 작업 완료")
     #파서 실행
