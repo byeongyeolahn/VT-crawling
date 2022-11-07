@@ -1,5 +1,3 @@
-
-
 def vendor_list():
     company_list = ['AhnLab-V3', 'Avira (no cloud)', 'BitDefenderFalx', 'Comodo', 'Cynet', 'Cyren', 'ESET-NOD32', 'Fortinet', 'Google', 'Ikarus', 
                     'Jiangmin', 'K7GW', 'Kaspersky', 'Lionic', 'MaxSecure', 'McAfee', 'McAfee-GW-Edition', 'Microsoft', 'NANO-Antivirus',
@@ -22,3 +20,7 @@ def detail_string():
 def classification_list():
     mal_tag = ['Adware', 'Ransomware', 'Spyware', 'Dropper', 'Banker', 'Phishing', 'SMS', 'Backdoor']
     return mal_tag
+
+def dic_list_load():
+    dic_list = ['./mal_apk', './benign_apk', './json_dic']
+    return dic_lis
