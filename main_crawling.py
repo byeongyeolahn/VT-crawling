@@ -122,7 +122,7 @@ def Determining_Malware(file_name, company, detection_name):
     print(str(file_name) + "의 Score : " + str(detected) + "/" + str(total))
 
     # 라벨링 작업 진행
-    if detected <= 1:
+    if detected <= 39:
         print("[+] " + str(file_name) + "분류(정상) 완료")
         detection_value.append('0')
 
@@ -131,6 +131,14 @@ def Determining_Malware(file_name, company, detection_name):
         detection_value.append('1')
     # Json 생성
     list_to_dictionary(file_name, company, detection_name)
+
+def class_tag(dictionary):
+    max_key = [di for di, vi in dictionary.items() if max(dictionary.values() == vi)]
+    print(max_key)
+    return max_key
+
+def label_family(classification, max):
+    return str(classification.index(max)+2)
 
 def list_to_dictionary(file_name, company, detection_name):
     vendor_list = company
@@ -154,8 +162,22 @@ def list_to_dictionary(file_name, company, detection_name):
                 dic = {classification_list[cl] : count}
             else:
                 dic[classification_list[cl]] = count
+
+        #분류될 카테고리 도출
+        max_value = class_tag(dic)
+        print("분류 결과 : " + str(max_value))
+
+        #패밀리 라벨링
+        family.append(label_family(classification_list, max_value))
+        #Json 변환
         json.dump(dic, json_file, indent=4, sort_keys=True)
+
     print("[+] " + str(json_name) + "파일 변환 완료")
+
+def class_tag(dictionary):
+    # max_key = [kc for kc, vc in dictionary.items() if max(dictionary.values()) == vc]
+    max_key = max(dictionary.keys())
+    return max_key
 
 def file_list_fun(data):
     print("================================================================================")
@@ -165,8 +187,8 @@ def file_list_fun(data):
     return df
 
 def csv_value_add(df, family, detection):
-    df['family'] = family
-    df['detection'] = detection
+    df['family'] = pd.Series(family)
+    df['detection'] = pd.Series(detection)
     return df
 
 if __name__ == '__main__':
@@ -188,7 +210,7 @@ if __name__ == '__main__':
         labeled_df.to_csv('sample/result.csv', index=False)
     except:
         print("[+] 동일 파일 이름 존재")
-        labeled_df.to_csv('sample/result.csv', index=False)
+        labeled_df.to_csv('sample/result2.csv', index=False)
 
     print("총 걸린 분류 시간 :", time.time() - start)
     print("[+] 작업 완료")
