@@ -8,21 +8,15 @@ import json
 import pandas as pd
 import dataframe
 import argparse
+import file_list
 
-#Cli 옵션 
-# parser = argparse.ArgumentParser(description="사용법 test 입니다")
-# parser.add_argument('-p', type=str, help = '-p C:\\Users\\SCHCsRC\\Desktop\\병열\\ChromeDriver\\chromedriver.exe' )
-# parser.add_argument('-o', type=str, help = '-o detection')
 
-# args = parser.parse_args()
-
-# CHROMEDRIVER_PATH = args.p
 CHROMEDRIVER_PATH =input("[+] Input ChromeDriver Path : ")
 
 #CSV 파일에 넣을 Value List 생성
 detection_value = []
 family = []
-Valid_From = []
+error_hash = []
 
 #시작 시 알림 함수
 def start():
@@ -35,13 +29,9 @@ def start():
         os.mkdir('json_dic')
     return start
 
-def file_list_fun(data):
-    df = data['sha256'].to_list()
-    return df
-# 드라이버 호출
 def get_driver():
     options = webdriver.ChromeOptions()
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
     driver = webdriver.Chrome(CHROMEDRIVER_PATH, options=options)
     #명시적 대기
     driver.implicitly_wait(3)
@@ -51,38 +41,60 @@ def get_driver():
 def main_crawling(file, option):
     driver=get_driver()
     # 옵션에 따른 URL 접근
+    file_num = len(file)
     for i in range(len(file)):
-        link_info = 'https://www.virustotal.com/gui/file/{}/'.format(file[i])
-        if option == 'details':
-            link_info = link_info + str(option) 
-        driver.get(link_info)
-        print("================================================================================")
-        print("[+] " + str(link_info) + " 접속")    
-        #Shadow 객체 생성
-        shadow = Shadow(driver)
-        # 명시적 대기
-        shadow.set_explicit_wait(20, 5)
+        try:
+            link_info = 'https://www.virustotal.com/gui/file/{}/'.format(file[i])
+            if option == 'details':
+                link_info = link_info + str(option) 
+            driver.get(link_info)
+            time.sleep(1)
+            
+            #에러 발생 예외 처리
+            if "item-not-found" in driver.current_url:
+                continue
+            if "captcha" in driver.current_url:
+                driver.back()
+                time.sleep(1)
+            if "too-many-requests" in driver.current_url:
+                time.sleep(30)
+                driver.get(link_info)
+            print("================================================================================")
+            print("[+] " + str(link_info) + " 접속")    
+            #Shadow 객체 생성
+            shadow = Shadow(driver)
+            # 명시적 대기
+            shadow.set_explicit_wait(20, 5)
+        except:
+            print("[+] " + str(file[i])  + " 링크 접속 중 에러 발생")
+            error_hash.append(file[i])
     
     # detail 창일 경우
         if option == 'details':
-            target_string = 'Valid From'
+            # target_string = 'Valid From'
             File_detail = shadow.find_element('vt-ui-file-details')
             
             File_detail_list = (File_detail.text).split('\n')
             #Valid From 인덱싱
-            Valid_From_index = File_detail_list.index(target_string)
-            Valid_From_info = File_detail_list[Valid_From_index+1]
-            Valid_From.append(Valid_From_info[:4])
+            # Valid_From_index = File_detail_list.index(target_string)
+            # Valid_From_info = File_detail_list[Valid_From_index+1]
+            # Valid_From.append(Valid_From_info[:4])
 
         elif option == 'detection':
-            # time.sleep(5) # 에러 발생 시만 넣기
-            detection_element = shadow.find_element('vt-ui-expandable')
-            detection_list = (detection_element.text).split('\n')
+            try:
+                detection_element = shadow.find_element('vt-ui-expandable')
+                detection_list = (detection_element.text).split('\n')
+            except:
+                print("[+] " + str(file[i])  + " Element, 데이터 크롤링 중 에러 발생")
+                error_hash.append(file[i])
+                continue
             crawling_parse(file[i], detection_list, 'detection')
             time.sleep(3)
+
         
         else:
             print('Option Value Error')
+        print("[+] 진행도 : " + str(i+1) + "/" + str(file_num))
 
 def crawling_parse(file_name, data, option):
     if option == "detection":
@@ -134,10 +146,7 @@ def label_family(classification, max):
 
 def list_to_dictionary(file_name, company, detection_name):
     vendor_list = company
-    if vendor_list > detection_name:
-        dictionary = {vendor_list[d] : detection_name[d] for d in range(len(vendor_list))}
-    else:
-        dictionary = {vendor_list[d] : detection_name[d] for d in range(len(detection_name))}
+    dictionary = {vendor_list[d] : detection_name[d] for d in range(len(detection_name))}
 
     slice_filename = file_name[:-4]
     json_name = "./json_dic/" + str(file_name) + ".json"
@@ -159,7 +168,7 @@ def list_to_dictionary(file_name, company, detection_name):
         print("[+] String 카운트 수 : " + str(dic))
         print("[+] 분류 결과 : " + str(max_value))
         
-        family.append(label_family(classification_list, max_value))
+        # family.append(label_family(classification_list, max_value))
         json.dump(dic, json_file, indent=4, sort_keys=True)
     print("[+] " + str(json_name) + "파일 변환 완료")
 
@@ -175,16 +184,16 @@ if __name__ == '__main__':
     df = dataframe.dataframe_load()
     
     #파일 목록 획득
-    file_list = file_list_fun(df)
+    file_list = file_list.file_list_load()
     crawling_data = main_crawling(file_list, input("Input Redirection Detail Web Site :"))
 
     # CSV 값 쓰기 
-    labeled_df = dataframe.csv_value_add(df, family, detection_value, Valid_From)
-    try:
-        labeled_df.to_csv('sample/result.csv', index=False)
-    except:
-        print("[+] 동일 파일 이름 존재")
-        labeled_df.to_csv('sample/result.csv', index=False)
+    labeled_df = dataframe.csv_value_add(df, family, detection_value)
+    # try:
+        # labeled_df.to_csv('sample/result.csv', index=False)
+    # except:
+    #     print("[+] 동일 파일 이름 존재")
+    #     labeled_df.to_csv('sample/result.csv', index=False)
 
     print("총 걸린 분류 시간 :", time.time() - start)
     print("[+] 작업 완료")
