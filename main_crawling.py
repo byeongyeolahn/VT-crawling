@@ -128,7 +128,7 @@ def Determining_Malware(file_name, company, detection_name):
     detected = total - undetected
 
     #분류 결과(Top 15로 변경 예정)
-    print(str(file_name) + "의 Score : " + str(detected) + "/" + str(total))
+    print("[+] " + str(file_name) + "의 Score : " + str(detected) + "/" + str(total))
 
     # 라벨링 작업 진행
     if detected <= 1:
