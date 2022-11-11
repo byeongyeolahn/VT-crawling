@@ -13,6 +13,7 @@ import file_list
 
 CHROMEDRIVER_PATH =input("[+] Input ChromeDriver Path : ")
 
+#CSV 파일에 넣을 Value List 생성
 detection_value = []
 family = []
 error_hash = []
@@ -179,15 +180,12 @@ def class_tag(dictionary):
 
 if __name__ == '__main__':
     start = start()
-    #dataframe 로드
-    df = dataframe.dataframe_load()
-    
-    #파일 목록 획득
+    #파일 목록
     file_list = file_list.file_list_load()
     crawling_data = main_crawling(file_list, input("Input Redirection Detail Web Site :"))
 
     # CSV 값 쓰기 
-    labeled_df = dataframe.csv_value_add(df, family, detection_value)
+    # labeled_df = dataframe.csv_value_add(df, family, detection_value)///
     # try:
         # labeled_df.to_csv('sample/result.csv', index=False)
     # except:
