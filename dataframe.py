@@ -27,5 +27,4 @@ def dataframe_load():
 def csv_value_add(df, family, detection):
     df['family'] = family
     df['detection'] = detection
-    # df['year'] = year
     return df
