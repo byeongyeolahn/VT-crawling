@@ -1,5 +1,6 @@
 from glob import glob
 import pandas as pd
+import os
 
 def csv_load(path):
     full_path = str(path) + '/*.csv'
@@ -13,3 +14,18 @@ def csv_load(path):
         # full_dataset = full_dataset.drop(full_dataset.columns[0], axis =1)
     full_dataset.to_csv('sample/result.csv', index=False)
     return full_dataset
+
+def dataframe_load():
+    if os.path.isfile('sample/result.csv'):
+        print("[+] result.csv 파일이 존재")
+        df = pd.read_csv('sample/result.csv')
+    else:
+        df = csv_load('sample')
+    return df
+
+
+def csv_value_add(df, family, detection):
+    df['family'] = family
+    df['detection'] = detection
+    # df['year'] = year
+    return df
