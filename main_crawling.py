@@ -13,7 +13,6 @@ import file_list
 
 CHROMEDRIVER_PATH =input("[+] Input ChromeDriver Path : ")
 
-#CSV 파일에 넣을 Value List 생성
 detection_value = []
 family = []
 error_hash = []
