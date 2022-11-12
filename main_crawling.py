@@ -57,7 +57,7 @@ def main_crawling(file, option):
                 driver.back()
                 time.sleep(1)
             if "too-many-requests" in driver.current_url:
-                time.sleep(30)
+                time.sleep(1)
                 driver.get(link_info)
             print("================================================================================")
             print("[+] " + str(link_info) + " 접속")    
@@ -89,7 +89,7 @@ def main_crawling(file, option):
                 error_hash.append(file[i])
                 continue
             crawling_parse(file[i], detection_list, 'detection')
-            time.sleep(3)
+            time.sleep(1)
 
         
         else:
