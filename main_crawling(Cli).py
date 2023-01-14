@@ -11,13 +11,13 @@ import argparse
 
 #Cli 옵션 
 parser = argparse.ArgumentParser(description="사용법 test 입니다")
-parser.add_argument('-p', type=str, help = '-p C:\\Users\\SCHCsRC\\Desktop\\병열\\ChromeDriver\\chromedriver.exe' )
+parser.add_argument('-p', type=str, help = '-p C:\\Users\\**\\Desktop\\User\\ChromeDriver\\chromedriver.exe' )
 parser.add_argument('-o', type=str, help = '-o detection')
 
 args = parser.parse_args()
 
 CHROMEDRIVER_PATH = args.p
-# CHROMEDRIVER_PATH = 'C:\\Users\\quddu\\Desktop\\뺑열\\Coding\\CHROMEDRIVER\\chromedriver.exe'
+
 
 detection_value = []
 family = []
