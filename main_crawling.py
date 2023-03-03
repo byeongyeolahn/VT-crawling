@@ -31,7 +31,7 @@ def start():
 
 def get_driver():
     options = webdriver.ChromeOptions()
-    options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
+    # options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
     driver = webdriver.Chrome(CHROMEDRIVER_PATH, options=options)
     #명시적 대기
     driver.implicitly_wait(3)
@@ -44,7 +44,7 @@ def main_crawling(file, option):
     file_num = len(file)
     for i in range(len(file)):
         try:
-            link_info = 'https://www.virustotal.com/gui/file/{}/'.format(file[i])
+            link_info = 'https://www.virustotal.com/gui/file/{}/'.format(file[i][:-4])
             if option == 'details':
                 link_info = link_info + str(option) 
             driver.get(link_info)
@@ -61,9 +61,7 @@ def main_crawling(file, option):
                 driver.get(link_info)
             print("================================================================================")
             print("[+] " + str(link_info) + " 접속")    
-            #Shadow 객체 생성
             shadow = Shadow(driver)
-            # 명시적 대기
             shadow.set_explicit_wait(20, 5)
         except:
             print("[+] " + str(file[i])  + " 링크 접속 중 에러 발생")
@@ -71,15 +69,9 @@ def main_crawling(file, option):
     
     # detail 창일 경우
         if option == 'details':
-            # target_string = 'Valid From'
             File_detail = shadow.find_element('vt-ui-file-details')
             
             File_detail_list = (File_detail.text).split('\n')
-            #Valid From 인덱싱
-            # Valid_From_index = File_detail_list.index(target_string)
-            # Valid_From_info = File_detail_list[Valid_From_index+1]
-            # Valid_From.append(Valid_From_info[:4])
-
         elif option == 'detection':
             try:
                 detection_element = shadow.find_element('vt-ui-expandable')
@@ -105,10 +97,11 @@ def crawling_parse(file_name, data, option):
                 if vl == 0:
                     continue
                 else:
-                    vendor_list.append(data[2*vl-1])
-                    vendor_value.append(data[(2*vl)])
+                    vendor_list.append(data[2*vl])
+                    vendor_value.append(data[(2*vl-1)])
             except:
                 print("[+] 진단명, 회사 파싱 중 오류 발생" )
+        vendor_value.remove("Do you want to automate checks?")
         return Determining_Malware(file_name, vendor_list, vendor_value)
         
 
@@ -140,9 +133,7 @@ def Determining_Malware(file_name, company, detection_name):
         detection_value.append('1')
     # Json 생성
     list_to_dictionary(file_name, company, detection_name)
-
-def label_family(classification, max):
-    return str(classification.index(max)+2)
+    
 
 def list_to_dictionary(file_name, company, detection_name):
     vendor_list = company
@@ -168,30 +159,21 @@ def list_to_dictionary(file_name, company, detection_name):
         print("[+] String 카운트 수 : " + str(dic))
         print("[+] 분류 결과 : " + str(max_value))
         
-        # family.append(label_family(classification_list, max_value))
         json.dump(dic, json_file, indent=4, sort_keys=True)
     print("[+] " + str(json_name) + "파일 변환 완료")
 
 def class_tag(dictionary):
-    # max_key = [kc for kc, vc in dictionary.items() if max(dictionary.values()) == vc]
     max_key = max(dictionary, key=dictionary.get)
     return max_key
 
 
 if __name__ == '__main__':
     start = start()
-    #파일 목록
-    file_list = file_list.file_list_load()
+    # 샘플 존재 경로
+    file_list = os.listdir('sample')
+    
+    # Crawling Stat
     crawling_data = main_crawling(file_list, input("Input Redirection Detail Web Site :"))
-
-    # CSV 값 쓰기 
-    # labeled_df = dataframe.csv_value_add(df, family, detection_value)///
-    # try:
-        # labeled_df.to_csv('sample/result.csv', index=False)
-    # except:
-    #     print("[+] 동일 파일 이름 존재")
-    #     labeled_df.to_csv('sample/result.csv', index=False)
 
     print("총 걸린 분류 시간 :", time.time() - start)
     print("[+] 작업 완료")
-    #파서 실행
