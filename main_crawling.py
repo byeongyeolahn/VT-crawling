@@ -5,11 +5,10 @@ import os
 import string_list
 import shutil
 import json
-import pandas as pd
 import dataframe
 import argparse
 import file_list
-
+import hashlib
 
 CHROMEDRIVER_PATH =input("[+] Input ChromeDriver Path : ")
 
@@ -21,7 +20,7 @@ error_hash = []
 #시작 시 알림 함수
 def start():
     print("================================================================================")
-    print("[+] VT Crawling Start ! ")       
+    print("[+] VT Crawling Start ! ")     
     start = time.time()
     if os.path.isdir('json_dic'):
         print('[+] json_dic 디렉토리 존재')
@@ -29,6 +28,12 @@ def start():
         os.mkdir('json_dic')
     return start
 
+def file_hash(file):
+    f = open(f'sample\\{file}', 'rb')
+    data = f.read()
+    hash = hashlib.md5(data).hexdigest()
+    return hash
+    
 def get_driver():
     options = webdriver.ChromeOptions()
     # options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
@@ -80,7 +85,8 @@ def main_crawling(file, option):
                 print("[+] " + str(file[i])  + " Element, 데이터 크롤링 중 에러 발생")
                 error_hash.append(file[i])
                 continue
-            crawling_parse(file[i], detection_list, 'detection')
+            md5_hash = file_hash(file[i])
+            crawling_parse(md5_hash, detection_list, 'detection')
             time.sleep(1)
 
         
@@ -167,13 +173,13 @@ def class_tag(dictionary):
     return max_key
 
 
+
 if __name__ == '__main__':
     start = start()
     # 샘플 존재 경로
-    file_list = os.listdir('sample')
-    
+    target_file = file_list.file_list_load()  
     # Crawling Stat
-    crawling_data = main_crawling(file_list, input("Input Redirection Detail Web Site :"))
+    crawling_data = main_crawling(target_file, input("Input Redirection Detail Web Site :"))
 
     print("총 걸린 분류 시간 :", time.time() - start)
     print("[+] 작업 완료")
