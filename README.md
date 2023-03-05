@@ -1,19 +1,26 @@
- VT-crawling
- ===============
+## VirusTotal-crawling
 
-### VT API와 유사한 형태를 구현
+---
 
-**데이터를 크롤링하여 사용하나 사용 후 데이터 삭제 및 상업적인 부분으로 이용하지 않음**
+### 코드 기능
 
-라벨링 정보
-=================
-정상 : 0 </br>
-악성 : 1 </br>
-Adware : 2 </br>
-Ransomware :3 </br>
-Spyware : 4 </br>
-Dropper : 5 </br>
-Banker : 6 </br>
-Phishing : 7 </br>
-SMS : 8 </br>
-Backdoor : 9 </br>
+`전체 기능`
+
+수집한 악성 샘플에 대해서 재검토하기 위한 크롤링 코드
+
+`main.py`
+
+크롤러 동작 수행 및 Json(결과) 파일 변환
+
+`file_list.py`
+
+파일 중복 검사 및 md5 해시 변환
+
+### 사용법
+
+1. `main.py` 실행
+2. 터미널 창에 크롬 드라이브 경로 입력
+3. Input Redirection Detail Web Site 에는 **detection** 입력
+4. 10~30개 사이 캡차 수동으로 진행해줘야 정상적으로 동작
+    
+    (500번 이상의 Request 요청 시 일정 시간동안 정지)
